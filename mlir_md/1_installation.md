@@ -117,19 +117,9 @@ Here the LLVM and MLIR installation is done and it is ready to go programming wi
 ## 純粹抱怨、碎碎念
 >因為老黃不想遵守大家一起訂出來的工業標準，所以現在大家為了GPU通解得降到更底層的編譯器 / 組合語言去工作。這不是我們愛找麻煩，是環境逼我們的。
 
-```bash
-# 1. 在大硬碟建立快取資料夾
-mkdir -p /workspace/.ccache
+## ( Update, May 18 2026 ) The CMake Configuration Flags for cloud server
 
-# 2. 把快取路徑寫入系統環境變數，指定到大硬碟
-echo 'export CCACHE_DIR=/workspace/.ccache' >> /root/.bashrc
-
-# 3. 讓設定立刻生效
-source /root/.bashrc
-
-# 4. 限制快取最大上限為 30GB
-ccache -M 30G
-```
+By skipping ```-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON``` in the CMake setup, the ```llvm-project``` remains decoupled from the root system. This approach is highly convenient for developing and validating builds on cloud servers.
 
 ```bash
 cd /workspace/llvm-project/build
@@ -137,15 +127,72 @@ cd /workspace/llvm-project/build
 rm -rf build && mkdir build && cd build
 
 cmake -G Ninja ../llvm \
+  -DCMAKE_MAKE_PROGRAM=$(which ninja) \
+  -DCMAKE_C_COMPILER=$(which clang) \
+  -DCMAKE_CXX_COMPILER=$(which clang++) \
+  -DCMAKE_ASM_COMPILER=$(which clang) \
+  -DLLVM_USE_LINKER=lld \
   -DLLVM_ENABLE_PROJECTS="mlir" \
   -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=ON \
-  -DCMAKE_C_COMPILER=clang \
-  -DCMAKE_CXX_COMPILER=clang++ \
-  -DLLVM_USE_LINKER=lld \
   -DLLVM_CCACHE_BUILD=ON \
-  -DMLIR_ENABLE_CUDA_CONVERSIONS=ON
+  -DMLIR_ENABLE_CUDA_CONVERSIONS=ON 
 
 ninja check-mlir
 ```
+
+### Why skipping RPATH makes cloud server development more convenient:
+
+- #### Environment Decoupling & Isolation 
+    Instead of installing to the root system (e.g., ```/usr/local```), all bin and lib files remain strictly within their respective build directories. This allows you to maintain multiple separate workspaces on the same server simultaneously (e.g., ```llvm-project-feature-A``` and ```llvm-project-feature-B```) without any path conflicts.
+
+- #### Rapid Iteration & Validation
+    After modifying your MLIR code, you can immediately validate your changes by running ```./bin/mlir-opt``` directly from the build directory or executing ninja check-mlir. This eliminates the need for a tedious make install step to overwrite system files.
+
+- #### Permission Conflict Avoidance
+    Cloud environments—especially shared corporate or academic servers—rarely grant developers sudo or root write permissions. Keeping the build independent of the system path ensures you can complete the entire development loop entirely within your personal home directory.
+
+## ( Update, May 19 2026 ) The Incremental build for NV gpu
+```bash
+#install nvcc 
+apt-get update && apt-get install -y nvidia-cuda-toolkit
+
+nvcc --version
+```
+output for reference:
+```
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Fri_Jan__6_16:45:21_PST_2023
+Cuda compilation tools, release 12.0, V12.0.140
+Build cuda_12.0.r12.0/compiler.32267302_0
+```
+```bash
+#incremental build
+cmake ../llvm -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMLIR_ENABLE_CUDA_RUNNER=ON \
+  -DMLIR_ENABLE_NVPTXCOMPILER=ON
+
+ninja mlir-opt mlir-runner
+```
+
+## ( Update, May 19 2026 ) Alternative Solution: Release Binaries
+## :star: :star: :star: Highly recommended solution—saves a lot of time and effort. :star: :star: :star:
+```bash
+cd /workspace
+
+# 1. donwload the Release Binaries
+wget https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.5/LLVM-22.1.5-Linux-X64.tar.xz
+
+# 2. decompress
+tar -xvf  LLVM-22.1.5-Linux-X64.tar.xz --no-same-owner
+
+mv LLVM-22.1.5-Linux-X64 llvm-bin
+
+# 3. validation
+./llvm-bin/bin/mlir-opt --version
+```
+
+- The ```--no-same-owner``` flag tells tar to make you (the user running the command) as the owner of the extracted files, rather than trying to preserve the original ownership from whoever created the archive.
