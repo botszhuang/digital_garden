@@ -196,3 +196,25 @@ mv LLVM-22.1.5-Linux-X64 llvm-bin
 ```
 
 - The ```--no-same-owner``` flag tells tar to make you (the user running the command) as the owner of the extracted files, rather than trying to preserve the original ownership from whoever created the archive.
+
+## Configure — for cuda runtime
+Installing the CUDA runtime is required because the official binary lacks ```libmlir_cuda_runtime.so```.
+```bash
+cd /workspace
+git clone --depth 1 --branch llvmorg-22.1.5 \
+  https://github.com/llvm/llvm-project.git llvm-src
+
+# Configure — build ONLY what's needed for cuda runtime
+cmake -B /workspace/llvm-cuda-build \
+  -S /workspace/llvm-src/llvm \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLLVM_ENABLE_PROJECTS="mlir" \
+  -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+  -DMLIR_ENABLE_CUDA_RUNNER=ON \
+  -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
+  -G Ninja
+ninja -C /workspace/llvm-cuda-build mlir_cuda_runtime -j$(nproc)
+
+cp /workspace/llvm-cuda-build/lib/libmlir_cuda_runtime.so \
+   /workspace/llvm-bin/lib/
+```
