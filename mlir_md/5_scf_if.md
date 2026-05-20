@@ -7,7 +7,7 @@ By Botsz on April 8, 2026
 This example demonstrates if-structure control flow whixh implemented in C++. 
 The logic is compiled into a shared library and then called via Python which executing native machine code rather than relying on JIT complilation. 
 This approch provides a relative simple and clean interface to control multiple complex funcstions.
-The complete source code is available in [mlir_5_scf_if](./mlir_5_scf_if/).
+The complete source code is available in [mlir_5_scf_if](../mlir_code/5_scf_if/).
 
 The example of if-structure control flow in MLIR is equivalent to, in C++,
 

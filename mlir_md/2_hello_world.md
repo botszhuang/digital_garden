@@ -148,7 +148,7 @@ sample_llvm result: 30
 
 
 
-Check out [the full code for the example](mlir_2_hello_world)
+Check out [the full code for the example](../mlir_code/2_hello_world)
 
 ## Reference
 [1] [LLVM Language Reference Manual](https://llvm.org/docs/LangRef.html)

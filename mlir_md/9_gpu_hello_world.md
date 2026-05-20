@@ -4,7 +4,7 @@ By Botsz on May 20, 2026
 
 **Disclaimer** : This is a documentation of my learning process only. Following these steps does not guarantee identical results.
 
-This code implements a simple 'Hello World' program using the MLIR GPU dialect and demonstrates how to call it from the main host program.
+This code implements a simple 'Hello World' program using the MLIR GPU dialect and demonstrates how to call it from the main host program. 
 
 ## 1. Module Attributes
 ```mlir
@@ -19,11 +19,8 @@ module attributes { gpu.container_module } { ... }
 - **The lable to Split Host and Device Code** : For heterogeneous computing (CPU + GPU), the compiler separates the process into Host code and Device code.
   - Host code : run on CPU and launch kernels.
   - Device code : Performs the functions on the GPU.
-- **分工標記** : 現代的編譯器在處理包含 GPU 加速的程式碼時，必須把程式碼分成兩部分：
-  一部份留在 CPU（Host） 負責控制流程與配置記憶體，另一部份則送到 GPU（Device） 負責平行運算。
 
 - **Container**(gpu.container_module): This is the top-level, host-side module in the CPU code. It acts as a parent container that encapsulates one or more nested submodules (marked with gpu.module) destined for the GPU.
-- **容器** : 當一個模組（```Module```）貼上 ```gpu.container_module``` 屬性時，代表它是一個 Host 端的大容器。容器內部會包含專門給 GPU 執行的子模組（通常標記為 ```gpu.module```）。
 
 ## 2. GPU Module
 ```mlir
@@ -62,10 +59,10 @@ This part executes the logic in CPU (Host).
 - ```%c1 = arith.constant 16 : index``` : Define a constant ```16```.
 - ```gpu.launch_func @kernels::@hello```: Launch the function ```@hello```, defined in the ```@kernels``` module.
 
-- ```blocks in (%c1,%c1,%c1)```: Set the **Grid** ```( x, y, z )``` shape and the total **Block** size = **1x1x1 = 1** in a **Grid**.
+- ```blocks in (%c1,%c1,%c1)```: Set the **Grid** shape ```( x, y, z )``` and the total **Block** size = **1x1x1 = 1** in a **Grid**.
 - ```threads in (%cN,%c1,%c1)```: Set the **Bolck** shape ```( x, y, z )``` and the toal **Thread** size = **16x1x1 = 16** in a **Bolck**.
 
-## 4 The Complete code
+## 4. The Complete code
 
 ```mlir
 module attributes { gpu.container_module } {
@@ -87,9 +84,9 @@ module attributes { gpu.container_module } {
   }
 }
 ```
-- 1. Host Request: The CPU (Host) uses gpu.launch_func to trigger the execution on the GPU (Device).
-- 2. Allocation: The GPU hardware scheduler maps the request to its internal cores (SMs), creating 1 Block and 16 Threads as defined by your parameters.
-- 3. Parallel Execution: Since there are 16 threads, the code inside @hello runs 16 times in parallel, but each thread has a unique %tid (Thread ID), allowing them to identify themselves.**
+1. Host Request: The CPU (Host) uses gpu.launch_func to trigger the execution on the GPU (Device).
+2. Allocation: The GPU hardware scheduler maps the request to its internal cores (SMs), creating 1 Block and 16 Threads as defined by your parameters.
+3. Parallel Execution: Since there are 16 threads, the code inside @hello runs 16 times in parallel, but each thread has a unique ```%tid``` (Thread ID), allowing them to identify themselves.**
 
 ```bash
 #output
@@ -110,6 +107,9 @@ Hello from thread 13
 Hello from thread 14
 Hello from thread 15
 ```
+
+The complete example is available in [mlir_code/9_gpu_hello_world-1](../mlir_code/9_gpu_hello_world-1/).
+
 ## Reference
 
 [1] Dialect Specification: Check the MLIR GPU Dialect documentation https://mlir.llvm.org/docs/Dialects/GPU/

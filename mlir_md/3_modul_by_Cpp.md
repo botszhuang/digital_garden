@@ -17,7 +17,7 @@ int mian(){
 
 ---
 
-**The complete source code is located in the [mlir_3_modul_by_Cpp](mlir_3_modul_by_Cpp) directory.** 
+**The complete source code is located in the [mlir_3_modul_by_Cpp](../mlir_code/3_modul_by_Cpp) directory.** 
 Constructing an MLIR module via the C++ API involves a specific integration order for its core components:
 
 ### 1.Registration of Dialects

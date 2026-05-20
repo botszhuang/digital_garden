@@ -4,7 +4,7 @@ By Botsz on April 5, 2026
 
 **Disclaimer** : This is a documentation of my learning process only. Following these steps does not guarantee identical results.
 
-Following the previous section [My MLIR Track #3](mlir_3_modul_by_Cpp.md), the MLIR module is now ready. In this section, we add the MLIR operations: registration, lowering, translation, and **JIT** (Just-In-Time) execution. **The complete source code is located in the [mlir_4_cpp_JIT](mlir_4_cpp_JIT) directory.** 
+Following the previous section [My MLIR Track #3](mlir_3_modul_by_Cpp.md), the MLIR module is now ready. In this section, we add the MLIR operations: registration, lowering, translation, and **JIT** (Just-In-Time) execution. **The complete source code is located in the [mlir_4_cpp_JIT](../mlir_code/4_cpp_JIT) directory.** 
 
 ## 1. Registration of Dialects
 Before MLIR can process any operations, in the MLIR ecosystem, the system also requires to register translation registration. 

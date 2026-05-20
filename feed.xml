@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+
+<channel>
+  <title>🚀 Botsz Digital Garden</title>
+  <link>https://github.com/botszhuang/digital_garden/tree/main</link>
+  <description>A repository dedicated to documenting my progress, experiments, and notes as I dive into the world of MLIR (Multi-Level Intermediate Representation) and LLVM.
+  </description>
+  <language>en-us</language>
+
+<item>
+    <title>Hello world for GPU</title>
+    <link>https://github.com/botszhuang/digital_garden/blob/main/mlir_md/9_gpu_hello_world.md</link>
+    <description>This code implements a simple 'Hello World' program using the MLIR GPU dialect and demonstrates how to call it from the main host program.</description>
+    <guid isPermaLink="true">https://github.com/botszhuang/digital_garden/blob/main/mlir_md/9_gpu_hello_world.md</guid>
+    <pubDate>Wed, 20 May 2026 00:00:00 GMT</pubDate>
+  </item>
+ 
+
+
+</channel>
+
+</rss>
