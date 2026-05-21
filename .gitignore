@@ -1,3 +1,4 @@
 mlir_code/*/build
+linux_kernel/*/build
 *.json
 llvm-project/
