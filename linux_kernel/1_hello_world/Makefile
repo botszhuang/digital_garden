@@ -1,22 +1,18 @@
 MODULE_NAME := hello
+PWD := $(shell pwd)
 BUILD_DIR   := $(PWD)/build
 
-KDIR ?= /lib/modules/$(shell uname -r)/build
+#KDIR ?= /lib/modules/$(shell uname -r)/build
+#KDIR ?= /lib/modules/6.18.32-0-lts
+KDIR ?= /usr/src/linux-headers-6.18.32-0-lts
 
 obj-m += $(MODULE_NAME).o
 
 all:
-	@
 	rm -rf $(BUILD_DIR)
-
-	@
 	mkdir -p $(BUILD_DIR)
-
-	@
 	cp *.c $(BUILD_DIR)
 	cp Makefile $(BUILD_DIR)
-	
-	@
 	make -C $(KDIR) M=$(BUILD_DIR) modules
 
 clean:

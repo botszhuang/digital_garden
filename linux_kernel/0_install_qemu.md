@@ -11,11 +11,6 @@ sudo apt install qemu-kvm qemu-system libvirt-daemon-system libvirt-clients brid
 - QEMU: Quick Emulator
 - KVM: Kernel-based Virtual Machine
 
-```bash
-sudo apt install virtme-ng
-```
-- virtme-ng: It spawns a sandboxed QEMU instance running the host, but cleanly isolates it. Anything inside this shell, which happens inside QEMU, cannot crash the host.
-
 ## Download a tiny test image
 Create a new folder, move into it, and download the standard Alpine Linux virtual ISO:
 ```bash

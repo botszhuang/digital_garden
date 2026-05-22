@@ -1,147 +1,78 @@
-#include <linux/module.h>
+// gpio_driver.c
+// date: 2024-05-21
+// author: botsz
+// description: A simple GPIO driver for Linux kernel.
+
+// 1. GPIO port control: probed & removed
+// 2. printk and KERN_ALERT in the probe and remove functions to print messages
+// 3. device tree match table
+// 5. register a platform driver, and implement the probe and remove functions
+
+ 
 #include <linux/init.h>
-#include <linux/fs.h>
-#include <linux/cdev.h>
-#include <linux/gpio/consumer.h>
-#include <linux/platform_device.h>
+#include <linux/module.h>
+#include <linux/platform_device.h> // for struct platform_device
+#include <linux/gpio/consumer.h>   // for gpio_desc
+#include <linux/mod_devicetable.h> // for of_struct of_device_id
 
-/* Metadata */
+#include <linux/err.h>             // for IS_ERR and PTR_ERR
+
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Kernel Mentor");
-MODULE_DESCRIPTION("A modern Linux GPIO Platform Driver");
 
-/* Device properties */
-static dev_t device_number;
-static struct class *device_class;
-static struct cdev gpio_cdev;
-static struct gpio_desc *gpio_led;
+struct gpio_desc * led ;
 
-#define DEVICE_NAME "my_gpio_dev"
-#define CLASS_NAME "my_gpio_class"
+// 1. GPIO port control: probed & removed ------------------------
+static int my_gpio_probe( struct platform_device *pdev ) {
+    
+    printk(KERN_ALERT "gpio_driver initialized\n");
 
-/* File Operations: When user writes to /dev/my_gpio_dev */
-static ssize_t driver_write(struct file *File, const char __user *user_buffer, size_t count, loff_t *offs) 
-{
-    char value;
+    // get the GPIO descriptor for the "led" GPIO pin
+    // pdev->dev : assign the hardware
+    // "led" : GPIO pin in the device tree
+    // enum gpiod_flags : GPIO_OUT_HIGH , initialize the GPIO pin with HIGH state 
+    led = gpiod_get( &(pdev->dev), "led", GPIOD_OUT_HIGH );
 
-    if (count == 0)
-        return 0;
-
-    if (copy_from_user(&value, user_buffer, 1)) {
-        return -EFAULT;
+    // Check if the GPIO descriptor is valid
+    if (IS_ERR(led)) { 
+        printk(KERN_ALERT "Failed to get GPIO descriptor for led\n");
+        return PTR_ERR(led); 
+        // PTR_ERR : convert the pointer to a error code
+        // in linux kernel, error pointers are used to indicate errors, 
+        // and PTR_ERR is used to convert the error pointer to an error code. 
     }
 
-    if (value == '1') {
-        gpiod_set_value(gpio_led, 1); /* Turn GPIO ON */
-        pr_info("GPIO Driver: Set pin HIGH\n");
-    } else if (value == '0') {
-        gpiod_set_value(gpio_led, 0); /* Turn GPIO LOW */
-        pr_info("GPIO Driver: Set pin LOW\n");
-    } else {
-        pr_warn("GPIO Driver: Invalid command. Use '1' or '0'\n");
-    }
-
-    return count;
-}
-
-static int driver_open(struct inode *device_file, struct file *instance) {
-    pr_info("GPIO Driver: Device file opened\n");
     return 0;
 }
 
-static int driver_close(struct inode *device_file, struct file *instance) {
-    pr_info("GPIO Driver: Device file closed\n");
+static int my_gpio_remove( struct platform_device *pdev ) {
+
+    printk(KERN_ALERT "gpio_driver exited\n"); 
+    
+    if (led) {
+        gpiod_set_value(led, 0 );  // set the GPIO pin 0, turn off the LED
+        gpiod_put(led); // release the GPIO pin
+    }
+
     return 0;
 }
 
-static struct file_operations fops = {
-    .owner = THIS_MODULE,
-    .open = driver_open,
-    .release = driver_close,
-    .write = driver_write
+// 3. device tree match table ------------------------------------
+// struct of_device_id : list all the compatible and supported devices
+static const struct of_device_id my_gpio_of_match[] = {
+    { .compatible = "companyName,my_gpio_led", }, // compatible string, should match the compatible string in the device tree
+    { } // empty, Sentinel node ,end of the table
 };
 
-/* Platform Probe: Runs when a matching device is found in Device Tree */
-static int gpio_probe(struct platform_device *pdev)
-{
-    struct device *dev = &pdev->dev;
-    int retval;
-
-    pr_info("GPIO Driver: Probe function called!\n");
-
-    /* Allocate Device Numbers */
-    if (alloc_chrdev_region(&device_number, 0, 1, DEVICE_NAME) < 0) {
-        pr_err("GPIO Driver: Failed to allocate major number\n");
-        return -1;
-    }
-
-    /* Create Device Class */
-    if ((device_class = class_create(CLASS_NAME)) == NULL) {
-        pr_err("GPIO Driver: Failed to create device class\n");
-        goto free_chrdev;
-    }
-
-    /* Create Device File */
-    if (device_create(device_class, NULL, device_number, NULL, DEVICE_NAME) == NULL) {
-        pr_err("GPIO Driver: Failed to create device file\n");
-        goto free_class;
-    }
-
-    /* Initialize Character Device */
-    cdev_init(&gpio_cdev, &fops);
-    if (cdev_add(&gpio_cdev, device_number, 1) < 0) {
-        pr_err("GPIO Driver: Failed to add cdev\n");
-        goto free_device;
-    }
-
-    /* Request GPIO from Device Tree (labeled "gpios" or "led-gpios" in DT) */
-    gpio_led = gpiod_get(dev, "led", GPIOD_OUT_LOW);
-    if (IS_ERR(gpio_led)) {
-        pr_err("GPIO Driver: Could not setup GPIO pin\n");
-        retval = PTR_ERR(gpio_led);
-        goto free_cdev;
-    }
-
-    return 0;
-
-free_cdev:
-    cdev_del(&gpio_cdev);
-free_device:
-    device_destroy(device_class, device_number);
-free_class:
-    class_destroy(device_class);
-free_chrdev:
-    unregister_chrdev_region(device_number, 1);
-    return -1;
-}
-
-/* Platform Remove: Runs when driver is unloaded */
-static int gpio_remove(struct platform_device *pdev)
-{
-    pr_info("GPIO Driver: Remove function called!\n");
-    gpiod_put(gpio_led);
-    cdev_del(&gpio_cdev);
-    device_destroy(device_class, device_number);
-    class_destroy(device_class);
-    unregister_chrdev_region(device_number, 1);
-    return 0;
-}
-
-/* Device Tree matching table */
-static const struct of_device_id gpio_dt_ids[] = {
-    { .compatible = "mentor,custom-gpio", },
-    { /* sentinel */ }
-};
-MODULE_DEVICE_TABLE(of, gpio_dt_ids);
-
-/* Platform Driver Structure */
+// define the platform driver structure
 static struct platform_driver my_gpio_driver = {
-    .probe = gpio_probe,
-    .remove = gpio_remove,
-    .driver = {
-        .name = "my_platform_gpio",
-        .of_match_table = gpio_dt_ids,
+    .probe = my_gpio_probe,   // called when the driver is loaded
+    .remove = my_gpio_remove, // called when the driver is removed
+    .driver = {                // driver structure
+        .name = "my_platform_gpio", // name of the driver, should match the compatible string in the device tree
+        .of_match_table = my_gpio_of_match, // Link the device tree match table 
     },
 };
 
-module_platform_driver(my_gpio_driver);
+// 4. register the platform driver ------------------------------
+// automatically creates the module_init and module_exit
+module_platform_driver( my_gpio_driver );

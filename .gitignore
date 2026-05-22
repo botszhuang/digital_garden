@@ -1,4 +1,4 @@
-mlir_code/*/build
-linux_kernel/*/build
+*/*/build
+*/qemu_vm
 *.json
 llvm-project/

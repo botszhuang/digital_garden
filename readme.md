@@ -1,6 +1,8 @@
-# 🚀 botsz's Digital Garden 
+# botsz's Digital Garden 
 
-A repository dedicated to documenting my progress, experiments, and notes as I dive into the world.
+A repository dedicated to documenting my progress, experiments, and notes as I dive into the world. 
+
+⚠️ As a personal work in progress, this collection may contain occasional errors or typographical inconsistencies.
 
 ## 📖 Table of Contents
 - MLIR
@@ -13,4 +15,10 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
     - [Hello world for GPU](mlir_md/9_gpu_hello_world.md)
 
 - Linux Kernel
-    - [Install QEMU and KVM](linux_kernel/1_install_qemu.md)
+    - [Install QEMU and KVM](linux_kernel/0_install_qemu.md)
+    - [QEMU](linux_kernel/2_qemu_1.md)
+    - [QEMU - apline linux](linux_kernel/2_qemu_2.md)
+    - [QEMU - Building a Linux Kernel and Initramfs](linux_kernel/2_qemu_3.md)
+        - [Create the Initramfs - Busybox (deprecated)](linux_kernel/2_qemu_4.md)
+        - [Create the Initramfs : BusyBox vs Dracut](linux_kernel/2_qemu_5.md)
+        - [Create the Initramfs - Busybox](linux_kernel/2_qemu_6.md)

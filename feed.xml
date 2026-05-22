@@ -10,7 +10,7 @@
 
 <item>
     <title>Install QEMU and KVM</title>
-    <link>https://github.com/botszhuang/digital_garden/blob/main/linux_kernel/1_install_qemu.md</link>
+    <link>https://github.com/botszhuang/digital_garden/blob/main/linux_kernel/0_install_qemu.md</link>
     <description># Installation
 ## Install QEMU and KVM
 ```bash
@@ -22,7 +22,7 @@ sudo apt install qemu-kvm qemu-system libvirt-daemon-system libvirt-clients brid
 ```bash
 sudo apt install virtme-ng
 ```</description>
-    <guid isPermaLink="true">https://github.com/botszhuang/digital_garden/blob/main/linux_kernel/1_install_qemu.md</guid>
+    <guid isPermaLink="true">https://github.com/botszhuang/digital_garden/blob/main/linux_kernel/0_install_qemu.md</guid>
     <pubDate>Thu, 21 May 2026 00:00:00 GMT</pubDate>
   </item>
 
