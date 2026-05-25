@@ -2,3 +2,4 @@
 */qemu_vm
 *.json
 llvm-project/
+llvm-bin/
