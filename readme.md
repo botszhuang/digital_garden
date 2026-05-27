@@ -24,3 +24,4 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
         - [Create the Initramfs - Busybox (deprecated)](linux_kernel/2_qemu_4.md)
         - [Create the Initramfs : BusyBox vs Dracut](linux_kernel/2_qemu_5.md)
         - [Create the Initramfs - Busybox](linux_kernel/2_qemu_6.md)
+    - [Run the Hello driver with QEMU](linux_kernel/2_qemu_7.md)

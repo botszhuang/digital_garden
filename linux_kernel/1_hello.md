@@ -76,6 +76,9 @@ sudo dmesg | tail -n 10
 # remove Module.
 sudo rmmod hello
 ```
-### Display the kernel ring buffer
-Because kernel modules run in kernel space, they cannot print text to the standard user terminal screen using printf. Instead, functions like printk() write to a special **internal memory buffer** called the **kernel ring buffer**.
-- `insmod`: (Diagnostic Message) A utility that reads out the contents of that internal kernel ring buffer.
+### Display the kernel ring buffer 
+Because kernel modules run in kernel space, they cannot print text to the standard user terminal screen using printf. Instead, functions like printk() write to a special **internal memory buffer** called the **kernel ring buffer**. [Ref](./0_install_qemu.md)
+- `insmod`: It is a trivial program to insert a module into the kernel
+- `rmmod`: It is a trivial program to remove a module from the kernel. 
+- `dmesg`: It prints the message buffer of the kernel, containing messages from device drivers and the kernel itself.
+
