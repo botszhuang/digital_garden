@@ -8,6 +8,7 @@ nvcc -ptx hello.cu -o cuda_hello.ptx --gpu-architecture=sm_89
 
 python test_ptx.py
 
+#output:
 # --- CU ---
 # Hello World from GPU!
 # ------------------
