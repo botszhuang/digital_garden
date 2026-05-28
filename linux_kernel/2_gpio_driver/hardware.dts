@@ -1,19 +1,9 @@
 /dts-v1/;
 / {
-    compatible = "qemu,virt";
-    #address-cells = <2>;
-    #size-cells = <1>;
-    
     my_led_device {
         compatible = "companyName,my_gpio_led";
-        led-gpios = <&gpio0 15 0>; /* Example: GPIO bank 0, pin 15, active high */
+        
+        /* The prefix "led" maps to your C code */
+        led-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>; 
     };
-
-   // Add this mock block so the compiler can resolve "&gpio0"
-    gpio0: gpio@10000000 {
-        compatible = "linux,mock-gpio";
-        gpio-controller;
-        #gpio-cells = <2>;
-        reg = <0x10000000 0x1000>;
-    }; 
 };

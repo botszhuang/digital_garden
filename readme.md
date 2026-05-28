@@ -7,7 +7,7 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
 ## 📖 Table of Contents
 
 - MLIR/LLVM
-    - [Installation](mlir_md/1_installation.md)
+    - :star: [Installation](mlir_md/1_installation.md)
     - [Hello world](mlir_md/2_hello_world.md)
     - [Simple MLIR module by C++](mlir_md/3_modul_by_Cpp.md)
     - [Simple MLIR module with JIT](mlir_md/4_modul_Cpp_JIT.md)
@@ -18,6 +18,9 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
     - [LLVM] [hello.cpp](llvm_test/2_hello_cpp.md)
     - [LLVM] [hello.cpp with JIT](llvm_test/3_hello_JIT.md)
     - [A mini record : Executing LLVM IR via PyCUDA](llvm_test/4_hello_pycuda.md)
+    - [LLVM] [hello.cpp for gpu #1 string](llvm_test/5_hello.md)
+    - [LLVM] [NVPTX Memory Hierarchy](llvm_test/6_NVPTX_memory.md)
+    - :star: [Generating my First LLVM IR: A Minimal Example](llvm_test/5_simple_cpp_1/readme.md)
 
 - Linux Kernel
     - [Install QEMU and KVM](linux_kernel/0_install_qemu.md)

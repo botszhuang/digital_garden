@@ -9,7 +9,6 @@ declare i32 @vprintf(ptr, ptr)
 define void @hello() {
 entry:
     ; 將格式化字串從常數空間轉為泛用指標 (Generic Pointer)
-    ; %str_ptr = cast addrspace(4) ptr addrspace(4) @.str to ptr
     %str_ptr = addrspacecast ptr addrspace(4) @.str to ptr
 
     ; 因為不需要帶入任何數字或變數，第二個參數直接傳入 null

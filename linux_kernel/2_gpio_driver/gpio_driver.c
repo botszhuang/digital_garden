@@ -2,12 +2,6 @@
 // date: 2024-05-21
 // author: botsz
 // description: A simple GPIO driver for Linux kernel.
-
-// 1. GPIO port control: probed & removed
-// 2. printk and KERN_ALERT in the probe and remove functions to print messages
-// 3. device tree match table
-// 5. register a platform driver, and implement the probe and remove functions
-
  
 #include <linux/init.h>
 #include <linux/module.h>
@@ -26,20 +20,16 @@ static int my_gpio_probe( struct platform_device *pdev ) {
     
     printk(KERN_ALERT "gpio_driver initialized\n");
 
-    // get the GPIO descriptor for the "led" GPIO pin
-    // pdev->dev : assign the hardware
-    // "led" : GPIO pin in the device tree
-    // enum gpiod_flags : GPIO_OUT_HIGH , initialize the GPIO pin with HIGH state 
+    // Grab the GPIO, set it to output, and drive it HIGH immediately
     led = gpiod_get( &(pdev->dev), "led", GPIOD_OUT_HIGH );
 
     // Check if the GPIO descriptor is valid
     if (IS_ERR(led)) { 
         printk(KERN_ALERT "Failed to get GPIO descriptor for led\n");
         return PTR_ERR(led); 
-        // PTR_ERR : convert the pointer to a error code
-        // in linux kernel, error pointers are used to indicate errors, 
-        // and PTR_ERR is used to convert the error pointer to an error code. 
     }
+
+    printk(KERN_ALERT "gpio_driver truned led ON\n");
 
     return 0;
 }
@@ -57,10 +47,9 @@ static int my_gpio_remove( struct platform_device *pdev ) {
 }
 
 // 3. device tree match table ------------------------------------
-// struct of_device_id : list all the compatible and supported devices
 static const struct of_device_id my_gpio_of_match[] = {
-    { .compatible = "companyName,my_gpio_led", }, // compatible string, should match the compatible string in the device tree
-    { } // empty, Sentinel node ,end of the table
+    { .compatible = "companyName,my_gpio_led", }, 
+    { }  
 };
 
 // define the platform driver structure
