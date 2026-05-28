@@ -16,6 +16,7 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
     - [Hello world for GPU](mlir_md/9_gpu_hello_world.md)
     - [LLVM] [hello.ll](llvm_test/1_hello.md)
     - [LLVM] [hello.cpp](llvm_test/2_hello_cpp.md)
+    - [LLVM] [hello.cpp with JIT](llvm_test/3_hello_JIT.md)
 
 - Linux Kernel
     - [Install QEMU and KVM](linux_kernel/0_install_qemu.md)

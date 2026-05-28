@@ -6,7 +6,7 @@ ${LLC} -march=nvptx64 -mcpu=sm_89 hello.ll -o llvm_hello.ptx
 
 nvcc -ptx hello.cu -o cuda_hello.ptx --gpu-architecture=sm_89
 
-python text_ptx.py
+python test_ptx.py
 
 # --- CU ---
 # Hello World from GPU!

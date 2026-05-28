@@ -10,8 +10,10 @@
 // JIT execution engine headers
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Support/TargetSelect.h>
+#include <memory>
 
-int JITEXcute( std::unique_ptr<llvm::Module> module ) {
+int JITEXcute( std::unique_ptr<llvm::Module> module ,
+               std::unique_ptr<llvm::LLVMContext> context ) {
 
     std::cout << "\n--- JIT processing ---\n";
 
@@ -27,7 +29,8 @@ int JITEXcute( std::unique_ptr<llvm::Module> module ) {
     auto JIT = std::move(*JITExpect);
 
     // 2. set the module in a pipline and hand it over to JIT
-    auto TSM = llvm::orc::ThreadSafeModule(std::move(module), std::make_unique<llvm::LLVMContext>());
+    auto TSM = llvm::orc::ThreadSafeModule(std::move(module), 
+                            std::move(context) );
     
     // Note: now JIT takes full ownership of the module's lifecycle,
     // so no `delete module` at the end.
@@ -58,18 +61,18 @@ int JITEXcute( std::unique_ptr<llvm::Module> module ) {
 
 int main() {
 
-    llvm::LLVMContext ctx;
-    llvm::Module * module = new llvm::Module("hello_module", ctx);
-    llvm::IRBuilder<> b(ctx);
+    auto ctx =std::make_unique<llvm::LLVMContext>() ;
+    auto module = std::make_unique<llvm::Module>("hello_module", *ctx);
+    llvm::IRBuilder<> b(*ctx);
 
     llvm::Type * int32Type = b.getInt32Ty();
 
     // Create the main function: int main()
     llvm::FunctionType * mainFuncType = llvm::FunctionType::get(int32Type, false);
-    llvm::Function * mainFunc = llvm::Function::Create(mainFuncType, llvm::Function::ExternalLinkage, "main", module);
+    llvm::Function * mainFunc = llvm::Function::Create(mainFuncType, llvm::Function::ExternalLinkage, "main", *module);
 
     // Create a basic block and set the insertion point
-    llvm::BasicBlock * mainBlock = llvm::BasicBlock::Create(ctx, "mainEntry", mainFunc);
+    llvm::BasicBlock * mainBlock = llvm::BasicBlock::Create(*ctx, "mainEntry", mainFunc);
     b.SetInsertPoint(mainBlock);
 
     // Create a string constant for "Hello, World!"
@@ -77,7 +80,7 @@ int main() {
 
     // puts(helloStr);
     llvm::FunctionType* putsType = llvm::FunctionType::get(int32Type, true);
-    llvm::Function* putsFunc = llvm::Function::Create(putsType, llvm::Function::ExternalLinkage, "puts", module);
+    llvm::Function* putsFunc = llvm::Function::Create(putsType, llvm::Function::ExternalLinkage, "puts", *module);
     b.CreateCall(putsFunc, {helloStr});
 
     // Return 0 from main
@@ -93,7 +96,7 @@ int main() {
     std::cout << "\n--- Generated LLVM IR ---\n";
     module->print(llvm::outs(), nullptr);
 
-    int ret =  JITEXcute( std::unique_ptr<llvm::Module>(module) )  ;
+    int ret =  JITEXcute( std::move(module) , std::move(ctx ) )  ;
 
     //delete module;
 
