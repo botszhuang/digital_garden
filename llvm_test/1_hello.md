@@ -1,5 +1,5 @@
 ---
-title: "LLVM - Hello World!"
+title: "LLVM - hello.ll"
 auther: "Botsz"
 date: 2026-05-26
 ---
@@ -95,6 +95,7 @@ int main() {
     return 0;
 }
 ```
+
 The complete example is available in [here](./1_hello/)
 
 ## Reference

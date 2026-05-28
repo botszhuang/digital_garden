@@ -1,4 +1,3 @@
-#LLVM_PROJECT_DIR := /workspace/llvm-bin
 LLVM_PROJECT_DIR := ../../llvm-bin
 
 LLC := $(LLVM_PROJECT_DIR)/bin/llc

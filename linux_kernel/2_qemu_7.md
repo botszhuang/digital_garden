@@ -71,7 +71,6 @@ config HELLO_DRIVER
 config HELLO_DRIVER
 ```
 - `HELLO_DRIVER` is defined as **Configuration Constants**
-- 
 ```
 tristate "Hello World Driver Support"
 ```
