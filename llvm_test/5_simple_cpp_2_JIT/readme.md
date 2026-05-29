@@ -20,13 +20,22 @@ To implement a JIT execution engine in C++, we need to include the following hea
 The lifetime and ownership of the LLVM Module and Context follow a specific pipeline to ensure safe dynamic execution:
 ```mermaid
 graph TD
-    A([External: Module + Context]) -->|Both passed via std::move| B(1. JITEXcute Function)
-    B --> C[2. Module + Context reunited in ThreadSafeModule]
-    C -->|std::move| D[3. Handed over entirely to LLJIT Engine]
-    D --> E[4. Look up the main function]
-    E --> F[5. Compiles and runs main successfully]
-    F --> G[Function finishes: JIT destructor automatically frees everything]
-    G --> H([✨ Clean Exit / Zero Memory Leaks])
+    A([External: Module + Context])
+    B(1. JITEXcute Function)
+    C[2. Module + Context reunited in ThreadSafeModule]
+    D[3. Handed over entirely to LLJIT Engine]
+    E[4. Look up the main function]
+    F[5. Compiles and runs main successfully]
+    G[Function finishes: JIT destructor automatically frees everything]
+    H([✨ Clean Exit / Zero Memory Leaks])
+
+    A -->|Both passed via std::move| B
+    B --> C
+    C -->|std::move| D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
 ```
 ## Code Implementation: jitExecute
 Below is the function to initialize the JIT engine, add our generated IR module, and run the compiled code.
