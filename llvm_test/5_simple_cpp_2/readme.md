@@ -1,125 +1,105 @@
 ---
-title: "Generating my First LLVM IR: A Minimal Example"
+title: "A Minimal LLVM IR Example with JIT"
 auther: "Botsz"
 date: 2026-05-29
 ---
-This tutorial demonstrates how to use the LLVM C++ API to programmatically generate a simple LLVM Intermediate Representation (IR) module. Our goal is to build a program that replicates a basic C function returning a constant.
+This post is a continuation of [Generating my First LLVM IR: A Minimal Example](./5_simple_cpp_1/readme.md). If you haven't read that yet, please check [this](./5_simple_cpp_1/readme.md) out first! 
 
-## The C Equivalence
-If this were written in C, the code would look like this:
+`LLJIT` is modern interface in LLVM to build `Just-In-Time` compilers[1].
+
+**A Quick Refresher**: A **Just-In-Time** (**JIT**) compiler generates machine code dynamically at runtime while the program is executing. In contrast, an **Ahead-Of-Time** (**AOT**) compiler translates source code into machine code before program execution begins[2].
+
+To implement a JIT execution engine in C++, we need to include the following headers:
 ```c
-int main() {
+// JIT execution engine headers
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/Support/TargetSelect.h>
+```
 
-    return 42;
+## Flow Chart of Just-In-Time compiler
+The lifetime and ownership of the LLVM Module and Context follow a specific pipeline to ensure safe dynamic execution:
+```mermaid
+graph TD
+    A([External: Module + Context]) -->|Both passed via std::move| B(1. JITEXcute Function)
+    B --> C[2. Module + Context reunited in ThreadSafeModule]
+    C -->|std::move| D[3. Handed over entirely to LLJIT Engine]
+    D --> E[4. Look up the main function]
+    E --> F[5. Compiles and runs main successfully]
+    F --> G[Function finishes: JIT destructor automatically frees everything]
+    G --> H([✨ Clean Exit / Zero Memory Leaks])
+```
+## Code Implementation: jitExecute
+Below is the function to initialize the JIT engine, add our generated IR module, and run the compiled code.
+```c
+int JITEXcute( std::unique_ptr<llvm::Module> module ,
+               std::unique_ptr<llvm::LLVMContext> context ) {
+
+    std::cout << "\n--- JIT processing ---\n";
+
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    // 1. Buid the LLJIT instance
+    auto JITExpect = llvm::orc::LLJITBuilder().create();
+    if (!JITExpect) {
+        llvm::errs() << "No JIT Engine: " << JITExpect.takeError() << "\n";
+        return 1;
+    }
+    auto JIT = std::move(*JITExpect);
+
+    // 2. Wrap the module in a thread-safe module pipline 
+    auto TSM = llvm::orc::ThreadSafeModule(std::move(module), 
+                            std::move(context) );
+    
+    // 3. Hand ownership over to the JIT engine
+    // Note: The JIT engine now takes full responsibility for the module's lifecycle.
+    // There is no need to manually delete or manage the module after this point.
+    if (auto Err = JIT->addIRModule(std::move(TSM))) {
+        llvm::errs() << "Cannot add module to JIT: " << std::move(Err) << "\n";
+        return 1;
+    }
+
+    // 4. Look up the "main" function
+    auto MainSymExpect = JIT->lookup("main");
+    if (!MainSymExpect) {
+        llvm::errs() << "Cannot find main function: " << MainSymExpect.takeError() << "\n";
+        return 1;
+    }
+    
+    // 5.1 Cast the symbol address to the matching C-style function pointer
+    // Signature mapping: int main() -> int(*)()
+    int (*ResultMain)() = MainSymExpect->toPtr<int(*)()>();
+    // 5.2 Call main() and get the return value, which should be 0
+    // 5.2 Execute the function and capture the exit code
+    int exitCode = ResultMain(); 
+    
+    std::cout << "\nJIT is done and return value is: " << exitCode << "\n";
+    
+    return 0 ;
 }
 ```
-## About the Rquired Header Files
-To interact with the LLVM infrastructure, we need to include the core IR management headers:
-```cpp
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/raw_ostream.h>
-```
-- `llvm/IR/LLVMContext.h` provids the definition for the `llvm::LLVMContext` class, which serves as the top-level container for managing global state and core data within the LLVM infrastructure[1].
-- `llvm::Module.h` class is the top-level container for all other LLVM Intermediate Representation (IR) objects. It holds the globals variables, functions, libraries, a symbol table, and various information about the target's characteristics[2].
-- `llvm/IR/IRBuilder.h` provides a uniform API for creating instructions and inserting them into a basic block: either at the end of a BasicBlock, or at a specific iterator location in a block[3].
-- `llvm/IR/Function.h` 
-- `llvm/IR/Verifier.h` provides a verifier interface to valify the input to the system and the transformations[4].
-- `llvm/Support/raw_ostream` implements an extremely fast bulk output stream to the system and **only output only**[5].
 
-## Setting Context, Module & IRBuilder
-Every LLVM program requires a core environment setup before generating any code:
-```cpp
-    auto ctx = std::make_unique<llvm::LLVMContext>();
-    auto module = std::make_unique<llvm::Module>("simple_module", *ctx);
-    llvm::IRBuilder<> b(*ctx);
-```
- - The **Context** acts as the global container of all LLVM state , including unique symbols and operation definitions. **Context** holds the definitions and rules that make the code valid. Therefore, the necessary Dialects must be explicitly loaded for the context to recognize specific operations.
+Here is a quick breakdown of the core functions and classes we will be using:
+| Function | ...| head file | 
+| :--- | :--- |:--- |
+| InitializeNativeTarget | Target Architecture Detection | TargetSelect.h| 
+| InitializeNativeTargetAsmPrinter | Machine Code Emission | TargetSelect.h|
+|LLJITBuilder| JIT Engine Execution | LLJIT.h|
+|ThreadSafeModule| Thread-safe IR Management | LLJIT.h|
 
-- A **Module** (```module```) is initialized as the top-level container. While the context provides the rules and vocabulary, the Module acts as the structural root that physically holds the functions and arithmetic operations defined by the developer.    
-
-- An **IRBuilder** is utilized as a cursor to manage the insertion of functions and operations into the Module. 
-
-## Defining the Function Prototype
-Next, we must explicitly declare the main function signature (int main()) and register it with our module.
-```c
-// Equivalent LLVM IR: declare i32 @main()
-
-// 1. Get the return type (32-bit integer)
-auto *Int32Ty = b.getInt32Ty();
-
-// 2. Define the function type: returns Int32, takes no arguments (false)
-auto *FuncTy = llvm::FunctionType::get(Int32Ty, false);
-
-// 3. Insert the main function into our module
-auto *MainFunc = llvm::Function::Create(
-        FuncTy,
-        llvm::Function::ExternalLinkage, // Visible outside the module
-        "main",
-        *module
-    );
-```
-## Implementing Main Logic
-
-LLVM IR requires instructions to live inside an explicit Basic Block. A basic block is a straight-line sequence of execution containing a single entry point and a single exit point.
-```c
-// 1. Create the 'entry' basic block inside MainFunc
-auto *EntryBB = llvm::BasicBlock::Create(*ctx, "entry", MainFunc);
-
-// 2. Tell the IRBuilder to start inserting instructions here
-b.SetInsertPoint(EntryBB);
-
-// 3. Generate the return statement (Equivalent LLVM IR: ret i32 42)
-auto *ReturnValue = b.getInt32(42); // Generate a constant 42
-b.CreateRet(ReturnValue);           // Generate the return instruction       
-```
-If this were written in C, the code would look like this:
-```c
-int main() {
-
-    return 42;
-}
-```
-## Verifying and Printing the LLVM IR
-
-Before outputting our generated structure, it is critical to run LLVM's internal verifier to guarantee that we haven't violated any IR structural rules.
-```c
-// Verify the module for consistency errors
-if (llvm::verifyModule(*module, &llvm::errs())) {
-    std::cerr << "LLVM Module verification failed!\n";
-    return EXIT_FAILURE;
-}
-
-// Print the generated IR to stdout
-std::cout << "--- Printed LLVM IR ---\n";
-module->print(llvm::outs(), nullptr);
-
-return EXIT_SUCCESS;
+## Compilation Flag Updates
+When compiling this setup, make sure your `Makefile` explicitly links the required ORC JIT and native target libraries from LLVM. Update your `LDFLAGS` as follows:
+```Makefile
+LDFLAGS  := $(shell $(LLVM_CONFIG) --ldflags --libs core support orcjit native --system-libs)
 ```
 
-### Expected Output:
 
-When you run the compiled C++ generator program, it will seamlessly output the valid LLVM assembly text representing the function:
-```
---- Print LLVM IR ---
-; ModuleID = 'simple_module'
-source_filename = "simple_module"
 
-define i32 @main() {
-entry:
-  ret i32 42
-}
-```
+The complete example is available [here](./)
 
 ## Reference
-[1] llvm::LLVMContext Class Reference https://llvm.org/doxygen/classllvm_1_1LLVMContext.html
+[1] LLJIT https://llvm.org/doxygen/group__LLVMCExecutionEngineLLJIT.html
 
-[2] llvm::Module Class Reference https://llvm.org/doxygen/classllvm_1_1Module.html
+[2] Learning LLVM (Part-3) by sh4dy 2024-11-24 https://sh4dy.com/2024/11/24/learning_llvm_03/
 
-[3] llvm::IRBuilder< FolderTy, InserterTy > Class Template Reference https://llvm.org/doxygen/classllvm_1_1IRBuilder.html#details
-
-[4] Verifier.h https://llvm.org/doxygen/Verifier_8h_source.html
-
-[5] llvm::raw_ostream Class Reference https://llvm.org/doxygen/classllvm_1_1raw__ostream.html
+[3] include/llvm/Support/TargetSelect.h File Reference https://llvm.org/doxygen/TargetSelect_8h.html

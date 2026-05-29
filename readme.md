@@ -16,11 +16,11 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
     - [Hello world for GPU](mlir_md/9_gpu_hello_world.md)
     - [LLVM] [hello.ll](llvm_test/1_hello.md)
     - [LLVM] [hello.cpp](llvm_test/2_hello_cpp.md)
-    - [LLVM] [hello.cpp with JIT](llvm_test/3_hello_JIT.md)
     - [A mini record : Executing LLVM IR via PyCUDA](llvm_test/4_hello_pycuda.md)
     - [LLVM] [hello.cpp for gpu #1 string](llvm_test/5_hello.md)
     - [LLVM] [NVPTX Memory Hierarchy](llvm_test/6_NVPTX_memory.md)
     - :star: [Generating my First LLVM IR: A Minimal Example](llvm_test/5_simple_cpp_1/readme.md)
+    - :star: [A Minimal LLVM IR Example with JIT](llvm_test/5_simple_cpp_2/readme.md)
 
 - Linux Kernel
     - [Install QEMU and KVM](linux_kernel/0_install_qemu.md)
