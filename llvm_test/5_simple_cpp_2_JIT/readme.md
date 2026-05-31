@@ -2,6 +2,7 @@
 title: "A Minimal LLVM IR Example with JIT"
 auther: "Botsz"
 date: 2026-05-29
+tags: [LLVM, Compilers, JIT]
 ---
 This post is a continuation of [Generating my First LLVM IR: A Minimal Example](./5_simple_cpp_1/readme.md). If you haven't read that yet, please check [this](./5_simple_cpp_1/readme.md) out first! 
 

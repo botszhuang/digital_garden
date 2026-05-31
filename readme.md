@@ -21,7 +21,8 @@ A repository dedicated to documenting my progress, experiments, and notes as I d
 - [LLVM] [NVPTX Memory Hierarchy](llvm_test/6_NVPTX_memory.md)
 - :star: [Generating my First LLVM IR: A Minimal Example](llvm_test/5_simple_cpp_1/readme.md)
 - :star: [A Minimal LLVM IR Example with JIT](llvm_test/5_simple_cpp_2_JIT/readme.md)
-- :star: [The Control Flow to LLVM IR (Branching vs. Selection)](llvm_test/5_simple_cpp_3_if/readme.md)
+- :star: [The Control Flow to LLVM IR - if (Branching vs. Selection)](llvm_test/5_simple_cpp_3_if/readme.md)
+- :star: [The Control Flow to LLVM IR - for](llvm_test/5_simple_cpp_4_for/readme.md)
 
 ## Linux Kernel
 - [Install QEMU and KVM](linux_kernel/0_install_qemu.md)

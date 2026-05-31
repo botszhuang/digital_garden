@@ -2,6 +2,7 @@
 title: "Generating my First LLVM IR: A Minimal Example"
 auther: "Botsz"
 date: 2026-05-29
+tags: [LLVM, Compilers, C, SSA]
 ---
 This tutorial demonstrates how to use the LLVM C++ API to programmatically generate a simple LLVM Intermediate Representation (IR) module. Our goal is to build a program that replicates a basic C function returning a constant.
 

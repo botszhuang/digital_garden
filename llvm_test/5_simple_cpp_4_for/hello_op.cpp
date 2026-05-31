@@ -141,7 +141,7 @@ int main() {
     auto * L_Entry = llvm::BasicBlock::Create(*ctx, "L_Entry", MainFunc);
     auto * L_CMP = llvm::BasicBlock::Create(*ctx, "L_CMP", MainFunc ) ;
     auto * L_LOGICS = llvm::BasicBlock::Create(*ctx, "L_LOGICS", MainFunc ) ;
-    auto * L_IPP = llvm::BasicBlock::Create(*ctx, "L_IPP", MainFunc ) ;
+    //auto * L_IPP = llvm::BasicBlock::Create(*ctx, "L_IPP", MainFunc ) ;
     auto * L_ret = llvm::BasicBlock::Create(*ctx, "L_ret", MainFunc);
 
 
@@ -160,9 +160,6 @@ int main() {
 
     b.SetInsertPoint(L_LOGICS);
         auto * new_sum = b.CreateAdd( sum_val, One, "new_sum", false , true ) ;
-        b.CreateBr(L_IPP);
-
-    b.SetInsertPoint(L_IPP);
         auto * new_i = b.CreateAdd ( i_val , One , "new_i" , false , true ) ;
         b.CreateBr(L_CMP);
 
@@ -170,9 +167,9 @@ int main() {
         b.CreateRet(sum_val);       
 
     i_val->addIncoming(Zero, L_Entry);
-    i_val->addIncoming(new_i, L_IPP);
+    i_val->addIncoming(new_i, L_LOGICS);
     sum_val->addIncoming(Ten, L_Entry);
-    sum_val->addIncoming(new_sum, L_IPP);
+    sum_val->addIncoming(new_sum, L_LOGICS);
 
     // --------------------------------------------------------------
     // 6. verify

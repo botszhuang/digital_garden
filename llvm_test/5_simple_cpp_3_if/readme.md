@@ -2,6 +2,7 @@
 title: "The Control Flow to LLVM IR (Branching vs. Selection)"
 auther: "Botsz"
 date: 2026-05-29
+tags: [LLVM, Compilers, C, SSA, if]
 ---
 This is a simple pratice to handle LLMV explicit branching (via Static Single Assignment and `phi` nodes) versus optimized, branchless prediction (via the `select` instruction).
 
