@@ -1,11 +1,14 @@
 #include <cstdlib>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Support/Alignment.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <iostream>
@@ -49,8 +52,7 @@ std::unique_ptr<llvm::orc::LLJIT> initJITAndAddModule(
 }
 int executeJITFunctions ( 
     llvm::orc::LLJIT & JIT,
-    const std::string& funcName, 
-    int argument ) {
+    const std::string& funcName ) {
 
     std::cout << "--- execute JIT function: " << funcName << "---"<< std::endl;    
 
@@ -63,12 +65,10 @@ int executeJITFunctions (
    
     // 4. Convert the symbol to a function pointer 
     // the original type :  int main( int a ) 
-    int (*ResultMain)(int) = MainSymExpect->toPtr<int(*)(int)>();
+    int (*ResultMain)() = MainSymExpect->toPtr<int(*)()>();
     
     // call main() and get the return value, which should be 0
-    int exitCode = ResultMain(argument);
-
-    std::cout << "argument: " << argument << std::endl ;
+    int exitCode = ResultMain();
     
     std::cout << "JIT is done and return value is: " << exitCode << "\n";
     
@@ -79,21 +79,35 @@ int executeJITFunctions (
 ; ModuleID = 'simple_module'
 source_filename = "simple_module"
 
-define i32 @main(i32 %a) {
-L_entry:
-  %cmp = icmp sgt i32 %a, 10
-  br i1 %cmp, label %L_if_true, label %L_if_false
+define i32 @main (){
+    L_Entry:
+        %sum = alloca i32, align 4
+        %i   = alloca i32, align 4
+        store i32 10, i32* %sum, align 4
+        store i32 0,  i32* %i,   align 4
+        br label %L_CMP
 
-L_if_true:                                        ; preds = %L_entry
-  br label %L_ret
+    L_CMP:
+        %ivalCMP = load i32, i32* %i, align 4
+        %cmp = icmp slt i32 %ivalCMP, 20 
+        br i1 %cmp, label %L_LOGICS , label %L_ret
 
-L_if_false:                                       ; preds = %L_entry
-  br label %L_ret
+    L_LOGICS:
+        %old_sum = load i32, i32* %sum, align 4
+        %new_sum = add nsw i32 %old_sum, 1
+        store i32 %new_sum, i32* %sum, align 4
+        br label %L_IPP
+        
+    L_IPP:
+        %old_i = load i32, i32* %i, align 4
+        %new_i = add nsw i32 %old_i, 1 
+        store i32 %new_i, i32* %i, align 4
+        br label %L_CMP
 
-L_ret:                                            ; preds = %L_if_false, %L_if_true
-  %RetVal = phi i32 [ 0, %L_if_true ], [ 1, %L_if_false ]
-  ret i32 %RetVal
-}
+    L_ret:
+        %sum_val = load i32, i32* %sum, align 4 
+        ret i32 %sum_val 
+}    
 
 */
 int main() {
@@ -104,9 +118,16 @@ int main() {
 
     // type
     auto *Int32Ty = b.getInt32Ty();
-        
+    auto align_4 = llvm::Align(4);
+
+    // number
+    auto * Ten = b.getInt32(10);
+    auto * Tewnty = b.getInt32(20);
+    auto * Zero = b.getInt32(0);
+    auto * One = b.getInt32(1);
+
     // LLVM IR: define i32 @main( i32 %a ) 
-    std::vector<llvm::Type*> mainArgs = {Int32Ty};
+    std::vector<llvm::Type*> mainArgs = {};
     auto *FuncTy = llvm::FunctionType::get(Int32Ty, mainArgs, false);
 
     // Add main into module
@@ -117,37 +138,85 @@ int main() {
         *module
     );
 
-
-    // variables
-    auto * a = MainFunc->getArg(0); a->setName("a") ;
-    auto * Ten = b.getInt32(10);
-    auto * Zero = b.getInt32(0);
-    auto * One = b.getInt32(1);
-
     //Labels
-    auto * L_entry = llvm::BasicBlock::Create(*ctx, "L_entry", MainFunc);
-    auto * L_if_true = llvm::BasicBlock::Create(*ctx, "L_if_true", MainFunc ) ;
-    auto * L_if_false = llvm::BasicBlock::Create(*ctx, "L_if_false", MainFunc ) ;
-    auto * L_ret = llvm::BasicBlock::Create(*ctx, "L_ret", MainFunc ) ;
+    auto * L_Entry = llvm::BasicBlock::Create(*ctx, "L_Entry", MainFunc);
+    auto * L_CMP = llvm::BasicBlock::Create(*ctx, "L_CMP", MainFunc ) ;
+    auto * L_LOGICS = llvm::BasicBlock::Create(*ctx, "L_LOGICS", MainFunc ) ;
+    auto * L_IPP = llvm::BasicBlock::Create(*ctx, "L_IPP", MainFunc ) ;
+    auto * L_ret = llvm::BasicBlock::Create(*ctx, "L_ret", MainFunc);
 
-    b.SetInsertPoint(L_entry);
+    // L_Entry:
+    b.SetInsertPoint(L_Entry);
 
-    auto cmp = b.CreateICmpSGT( a , Ten , "cmp" ) ;
-    b.CreateCondBr(cmp, L_if_true, L_if_false);
+        // %sum = alloca i32, align 4
+        auto * sumPtr = b.CreateAlloca( Int32Ty, nullptr , "sumPtr" ) ; 
+        sumPtr->setAlignment( align_4 );
+        
+        // %i = alloca i32, align 4
+        auto * iPtr = b.CreateAlloca( Int32Ty, nullptr , "iPtr" ) ; 
+        iPtr->setAlignment( align_4 );
 
-    b.SetInsertPoint( L_if_true);
-    b.CreateBr(L_ret);
+        // store i32 10, i32* %sum, align 4
+        auto * storeSumPtr = b.CreateStore(Ten, sumPtr);
+        storeSumPtr->setAlignment(align_4);
 
-    b.SetInsertPoint(L_if_false);
-    b.CreateBr(L_ret);
+        // store i32 0,  i32* %i,   align 4
+        auto * storeIPtr = b.CreateStore(Zero, iPtr);
+        storeIPtr->setAlignment(align_4);
 
-    b.SetInsertPoint(L_ret) ;
-    auto * RetVal = b.CreatePHI(Int32Ty, 2 , "RetVal");
-    RetVal->addIncoming(Zero, L_if_true);
-    RetVal->addIncoming(One, L_if_false);
+        // br label %L_CMP
+        b.CreateBr(L_CMP);
 
-    // LLVM IR: ret i32 42
-    b.CreateRet(RetVal);           
+
+    b.SetInsertPoint( L_CMP);
+        //%ivalCMP = load i32, i32* %i, align 4
+        auto * ivalCMP = b.CreateLoad(Int32Ty, iPtr);
+        ivalCMP->setAlignment(align_4);
+        
+        //%cmp = icmp slt i32 %ivalCMP, 20
+        auto * cmpVal = b.CreateICmp(llvm::CmpInst::ICMP_SLT, ivalCMP, Tewnty ) ;
+        
+        //br i1 %cmp, label %L_LOGICS , label %L_ret
+        b.CreateCondBr( cmpVal , L_LOGICS , L_ret ) ;
+
+
+    b.SetInsertPoint(L_LOGICS);
+
+        // %old_sum = load i32, i32* %sum, align 4
+        auto * old_sumVal = b.CreateLoad(Int32Ty,sumPtr);
+        
+        // %new_sum = add nsw i32 %old_sum, 1
+        auto * new_sumVal = b.CreateAdd(old_sumVal, One, "new_sum" ,false, true);
+        
+        // store i32 %new_sum, i32* %sum, align 4
+        auto * storeNew_SumVal = b.CreateStore( new_sumVal, sumPtr);
+        storeNew_SumVal->setAlignment(align_4);
+
+        // br label %L_IPP
+        b.CreateBr(L_IPP);
+
+
+    b.SetInsertPoint(L_IPP) ;
+        // %old_i = load i32, i32* %i, align 4
+        auto * old_iVal = b.CreateLoad(Int32Ty, iPtr);
+        old_iVal->setAlignment(align_4);
+        
+        // %new_i = add nsw i32 %old_i, 1 
+        auto * new_iVal = b.CreateAdd( old_iVal, One, "new_i", false, true ); 
+        
+        // store i32 %new_i, i32* %i, align 4
+        auto * storeNew_i = b.CreateStore(new_iVal, iPtr);
+        storeNew_i->setAlignment(align_4);
+
+        // br label %L_CMP
+        b.CreateBr( L_CMP ) ;
+
+    b.SetInsertPoint(L_ret);
+
+        // %sum_val = load i32, i32* %sum, align 4 
+        auto * retVal = b.CreateLoad(Int32Ty,sumPtr);    
+        // ret i32 %sum_val 
+        b.CreateRet(retVal);           
 
     // --------------------------------------------------------------
     // 6. verify
@@ -162,8 +231,7 @@ int main() {
     auto myJIT = initJITAndAddModule(std::move(module), std::move(ctx));
     if ( ! myJIT ) { return EXIT_FAILURE ; }
   
-    int result1 = executeJITFunctions( * myJIT , "main", 1 );
-    int result2 = executeJITFunctions( * myJIT , "main", 15 );
+    int result1 = executeJITFunctions( * myJIT , "main" );
 
     return EXIT_SUCCESS ;
 }

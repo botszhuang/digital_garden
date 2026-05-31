@@ -1,7 +1,7 @@
 ---
 title: "The Control Flow to LLVM IR (Branching vs. Selection)"
 auther: "Botsz"
-date: 2026-05-30
+date: 2026-06-31
 ---
 This is a practice of `for` loop in LLVM IR, it helps me to understand that LLVM doesn't have high-level loop constructs.
 Instead, it relies on **Basic Blocks** and **Conditional Branches** (`br`) to control the flow.
