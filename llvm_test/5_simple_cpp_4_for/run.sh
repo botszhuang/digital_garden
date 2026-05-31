@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Call the Makefile, passing the target as a variable
-source1="hello"
-make TARGET=$(source)
-# make clean TARGET=$(source)
+source="hello_op"
+make TARGET=${source}
+
+./${source}
+# make clean TARGET=${source}
 
