@@ -75,41 +75,6 @@ int executeJITFunctions (
     return exitCode ;
 }
 
-/* LLVM IR
-; ModuleID = 'simple_module'
-source_filename = "simple_module"
-
-define i32 @main (){
-    L_Entry:
-        %sum = alloca i32, align 4
-        %i   = alloca i32, align 4
-        store i32 10, i32* %sum, align 4
-        store i32 0,  i32* %i,   align 4
-        br label %L_CMP
-
-    L_CMP:
-        %ivalCMP = load i32, i32* %i, align 4
-        %cmp = icmp slt i32 %ivalCMP, 20 
-        br i1 %cmp, label %L_LOGICS , label %L_ret
-
-    L_LOGICS:
-        %old_sum = load i32, i32* %sum, align 4
-        %new_sum = add nsw i32 %old_sum, 1
-        store i32 %new_sum, i32* %sum, align 4
-        br label %L_IPP
-        
-    L_IPP:
-        %old_i = load i32, i32* %i, align 4
-        %new_i = add nsw i32 %old_i, 1 
-        store i32 %new_i, i32* %i, align 4
-        br label %L_CMP
-
-    L_ret:
-        %sum_val = load i32, i32* %sum, align 4 
-        ret i32 %sum_val 
-}    
-
-*/
 int main() {
     
     auto ctx = std::make_unique<llvm::LLVMContext>();

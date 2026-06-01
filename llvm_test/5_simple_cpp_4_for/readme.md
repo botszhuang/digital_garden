@@ -1,7 +1,7 @@
 ---
 title: "The Control Flow to LLVM IR - for"
 auther: "Botsz"
-date: 2026-06-30
+date: 2026-05-30
 tags: [LLVM, Compilers, C, SSA, for, while]
 ---
 This is a practice of `for` and `while` loops in LLVM IR. 
