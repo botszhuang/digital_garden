@@ -1,9 +1,30 @@
 /dts-v1/;
+
 / {
-    my_led_device {
+    model = "My First LED Board";
+    compatible = "learning,led-board";
+
+    /* the hardware provider */
+    gpio1: my_virtual_gpio {
+        gpio-controller;
+        #gpio-cells = <2>;
+    };
+
+    my_led_node { 
         compatible = "companyName,my_gpio_led";
-        
-        /* The prefix "led" maps to your C code */
-        led-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>; 
+   
+        /* * GPIO Specifier
+         * &gpio1: a pointer (or reference) to a specific GPIO controller.
+         * 18 : Pin Number
+         * 0 : Flags
+         */
+        led-gpios = <&gpio1 18 0>; 
+
+        /* * Memory-mapped IO: Memory mapping for the registers 
+         * 0x40020000: The starting physical memory address of the registers
+         * 0x1000: The size/length of the memory block occupied by this region (bytes)
+         * reg = <0x40020000 0x1000>;
+         */
+
     };
 };

@@ -123,8 +123,7 @@ Boot the Kernel and Initramfs :
 qemu-system-x86_64 \
    -kernel ./linux-6.19/arch/x86/boot/bzImage \
    -initrd ./initramfs.cpio.gz \
-   -append "console=ttyS0" \
-   -m 512
+   -m 512 -nographic
 ```
 To verify that a Linux kernel module has loaded correctly and successfully printed a message to the kernel's ring buffer.
 ```bash
